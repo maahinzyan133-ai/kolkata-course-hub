@@ -1,14 +1,18 @@
 import { useState } from "react";
-import { Menu, X, Phone, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Menu, X, Phone, MapPin, User, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAdmin } = useAuth();
 
   const navLinks = [
     { name: "Home", href: "#home" },
     { name: "Courses", href: "#courses" },
     { name: "About", href: "#about" },
+    { name: "Testimonials", href: "#testimonials" },
     { name: "Achievements", href: "#achievements" },
     { name: "Contact", href: "#contact" },
   ];
@@ -59,6 +63,23 @@ const Header = () => {
                 {link.name}
               </a>
             ))}
+            
+            {user ? (
+              <Button variant="outline" size="default" asChild>
+                <Link to="/dashboard">
+                  <User className="w-4 h-4 mr-2" />
+                  {isAdmin ? "Admin Panel" : "Dashboard"}
+                </Link>
+              </Button>
+            ) : (
+              <Button variant="outline" size="default" asChild>
+                <Link to="/auth">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Login
+                </Link>
+              </Button>
+            )}
+            
             <Button variant="default" size="default" className="gradient-primary">
               <a href="#booking">Book Now</a>
             </Button>
@@ -88,6 +109,27 @@ const Header = () => {
                   {link.name}
                 </a>
               ))}
+              
+              {user ? (
+                <Link
+                  to="/dashboard"
+                  className="py-2 px-3 font-medium text-primary hover:bg-muted rounded-lg transition-colors flex items-center gap-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <User className="w-4 h-4" />
+                  {isAdmin ? "Admin Panel" : "Dashboard"}
+                </Link>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="py-2 px-3 font-medium text-primary hover:bg-muted rounded-lg transition-colors flex items-center gap-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <LogIn className="w-4 h-4" />
+                  Login / Register
+                </Link>
+              )}
+              
               <Button variant="default" className="gradient-primary mt-2">
                 <a href="#booking" onClick={() => setIsMenuOpen(false)}>Book Now</a>
               </Button>
