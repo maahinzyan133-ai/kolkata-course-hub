@@ -14,16 +14,313 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      attendance: {
+        Row: {
+          created_at: string
+          enrollment_id: string
+          id: string
+          notes: string | null
+          present: boolean
+          session_date: string
+        }
+        Insert: {
+          created_at?: string
+          enrollment_id: string
+          id?: string
+          notes?: string | null
+          present?: boolean
+          session_date: string
+        }
+        Update: {
+          created_at?: string
+          enrollment_id?: string
+          id?: string
+          notes?: string | null
+          present?: boolean
+          session_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      certificates: {
+        Row: {
+          certificate_number: string
+          created_at: string
+          enrollment_id: string
+          file_url: string | null
+          id: string
+          issue_date: string
+        }
+        Insert: {
+          certificate_number: string
+          created_at?: string
+          enrollment_id: string
+          file_url?: string | null
+          id?: string
+          issue_date?: string
+        }
+        Update: {
+          certificate_number?: string
+          created_at?: string
+          enrollment_id?: string
+          file_url?: string | null
+          id?: string
+          issue_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: true
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courses: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          discount_percent: number | null
+          duration: string
+          fee: number
+          full_name: string
+          id: string
+          is_popular: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          duration: string
+          fee: number
+          full_name: string
+          id?: string
+          is_popular?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          duration?: string
+          fee?: number
+          full_name?: string
+          id?: string
+          is_popular?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      enrollments: {
+        Row: {
+          amount_paid: number | null
+          batch_timing: string | null
+          course_id: string
+          created_at: string
+          enrollment_date: string
+          id: string
+          payment_due_date: string | null
+          payment_status: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          batch_timing?: string | null
+          course_id: string
+          created_at?: string
+          enrollment_date?: string
+          id?: string
+          payment_due_date?: string | null
+          payment_status?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number | null
+          batch_timing?: string | null
+          course_id?: string
+          created_at?: string
+          enrollment_date?: string
+          id?: string
+          payment_due_date?: string | null
+          payment_status?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          title: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          content: string
+          course_id: string | null
+          created_at: string
+          id: string
+          is_published: boolean | null
+          rating: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean | null
+          rating?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean | null
+          rating?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "testimonials_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: never; Returns: boolean }
+      user_owns_enrollment: {
+        Args: { _enrollment_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +447,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "student"],
+    },
   },
 } as const
