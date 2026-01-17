@@ -3,10 +3,12 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Courses from "@/components/Courses";
 import About from "@/components/About";
+import Testimonials from "@/components/Testimonials";
 import Achievements from "@/components/Achievements";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import BookingModal from "@/components/BookingModal";
+import WhatsAppButton from "@/components/WhatsAppButton";
 import type { Course } from "@/components/Courses";
 
 const Index = () => {
@@ -41,6 +43,7 @@ const Index = () => {
         <Hero />
         <Courses onBookCourse={handleBookCourse} />
         <About />
+        <Testimonials />
         <Achievements />
         <Contact />
       </main>
@@ -51,6 +54,8 @@ const Index = () => {
         onClose={() => setIsBookingOpen(false)}
         selectedCourse={selectedCourse}
       />
+      
+      <WhatsAppButton />
     </div>
   );
 };
