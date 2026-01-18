@@ -7,12 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Users, BookOpen, GraduationCap, IndianRupee, 
-  Award, Calendar, Search, UserPlus, CheckCircle, 
-  Clock, AlertCircle, Trash2, Edit, Send
+  Award, Calendar, Search, CheckCircle, 
+  Clock, AlertCircle, Trash2, Send, FileText, Bell, Zap
 } from "lucide-react";
 
 interface User {
@@ -129,24 +128,36 @@ const AdminDashboard = () => {
     }
   };
 
-  const issueCertificate = async (enrollmentId: string) => {
-    const certNumber = `MCC-${Date.now().toString(36).toUpperCase()}`;
+  const issueCertificate = async (enrollmentId: string, userId: string, courseName: string) => {
+    toast({ title: "Generating...", description: "Creating certificate..." });
     
-    const { error } = await supabase
-      .from('certificates')
-      .insert({
-        enrollment_id: enrollmentId,
-        certificate_number: certNumber,
-      });
+    const { data, error } = await supabase.functions.invoke('generate-certificate', {
+      body: { enrollment_id: enrollmentId }
+    });
 
     if (error) {
-      if (error.code === '23505') {
-        toast({ title: "Info", description: "Certificate already issued for this enrollment" });
-      } else {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-      }
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Success", description: `Certificate ${certNumber} issued!` });
+      toast({ title: "Success", description: `Certificate ${data.certificate?.certificate_number} issued!` });
+      
+      // Send completion notification
+      await supabase.functions.invoke('send-notification', {
+        body: { type: 'course_completion', user_id: userId, data: { course_name: courseName, certificate_number: data.certificate?.certificate_number } }
+      });
+      
+      fetchData();
+    }
+  };
+
+  const sendPaymentReminder = async (userId: string, courseName: string, amountDue: number) => {
+    const { error } = await supabase.functions.invoke('send-notification', {
+      body: { type: 'payment_reminder', user_id: userId, data: { course_name: courseName, amount_due: amountDue } }
+    });
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Success", description: "Payment reminder sent!" });
     }
   };
 
@@ -372,7 +383,8 @@ const AdminDashboard = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => issueCertificate(enrollment.id)}
+                              title="Issue Certificate"
+                              onClick={() => issueCertificate(enrollment.id, enrollment.user_id, enrollment.courses?.name || '')}
                               disabled={enrollment.status !== 'completed'}
                             >
                               <Award className="w-4 h-4" />
@@ -380,10 +392,21 @@ const AdminDashboard = () => {
                             <Button
                               size="sm"
                               variant="outline"
+                              title="Mark Attendance"
                               onClick={() => markAttendance(enrollment.id, true)}
                             >
                               <Calendar className="w-4 h-4" />
                             </Button>
+                            {enrollment.payment_status !== 'paid' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                title="Send Payment Reminder"
+                                onClick={() => sendPaymentReminder(enrollment.user_id, enrollment.courses?.name || '', (enrollment.courses?.fee || 0) - enrollment.amount_paid)}
+                              >
+                                <Bell className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
