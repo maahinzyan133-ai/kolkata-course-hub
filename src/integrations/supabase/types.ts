@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          achievement_date: string | null
+          center_id: string | null
+          course_name: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_featured: boolean | null
+          student_name: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          achievement_date?: string | null
+          center_id?: string | null
+          course_name?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          student_name?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          achievement_date?: string | null
+          center_id?: string | null
+          course_name?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          student_name?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achievements_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           created_at: string
@@ -48,6 +98,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      centers: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       certificates: {
         Row: {
@@ -130,6 +210,7 @@ export type Database = {
         Row: {
           amount_paid: number | null
           batch_timing: string | null
+          center_id: string | null
           course_id: string
           created_at: string
           enrollment_date: string
@@ -143,6 +224,7 @@ export type Database = {
         Insert: {
           amount_paid?: number | null
           batch_timing?: string | null
+          center_id?: string | null
           course_id: string
           created_at?: string
           enrollment_date?: string
@@ -156,6 +238,7 @@ export type Database = {
         Update: {
           amount_paid?: number | null
           batch_timing?: string | null
+          center_id?: string | null
           course_id?: string
           created_at?: string
           enrollment_date?: string
@@ -167,6 +250,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "enrollments_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "enrollments_course_id_fkey"
             columns: ["course_id"]
@@ -298,9 +388,51 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_history: {
+        Row: {
+          amount: number
+          created_at: string
+          enrollment_id: string
+          id: string
+          notes: string | null
+          payment_date: string
+          payment_method: string | null
+          receipt_number: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          enrollment_id: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string | null
+          receipt_number?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          enrollment_id?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string | null
+          receipt_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_history_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          center_id: string | null
           created_at: string
           email: string
           full_name: string
@@ -311,6 +443,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          center_id?: string | null
           created_at?: string
           email: string
           full_name: string
@@ -321,6 +454,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          center_id?: string | null
           created_at?: string
           email?: string
           full_name?: string
@@ -329,7 +463,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       testimonials: {
         Row: {
@@ -392,6 +534,66 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      videos: {
+        Row: {
+          center_id: string | null
+          course_id: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          is_public: boolean | null
+          order_index: number | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_url: string
+        }
+        Insert: {
+          center_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_public?: boolean | null
+          order_index?: number | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_url: string
+        }
+        Update: {
+          center_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_public?: boolean | null
+          order_index?: number | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "videos_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

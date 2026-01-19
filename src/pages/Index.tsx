@@ -4,11 +4,13 @@ import Hero from "@/components/Hero";
 import Courses from "@/components/Courses";
 import About from "@/components/About";
 import Testimonials from "@/components/Testimonials";
-import Achievements from "@/components/Achievements";
+import AchievementsSection from "@/components/AchievementsSection";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import BookingModal from "@/components/BookingModal";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import EnrollmentForm from "@/components/EnrollmentForm";
+import Videos from "@/components/Videos";
 import type { Course } from "@/components/Courses";
 
 const Index = () => {
@@ -20,7 +22,6 @@ const Index = () => {
     setIsBookingOpen(true);
   };
 
-  // Listen for booking link clicks
   useEffect(() => {
     const handleBookingClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -41,10 +42,12 @@ const Index = () => {
       <Header />
       <main>
         <Hero />
+        <EnrollmentForm />
         <Courses onBookCourse={handleBookCourse} />
+        <Videos />
         <About />
         <Testimonials />
-        <Achievements />
+        <AchievementsSection />
         <Contact />
       </main>
       <Footer />
