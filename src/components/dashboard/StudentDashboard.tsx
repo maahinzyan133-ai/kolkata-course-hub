@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
+import { generateReceiptPDF, generateAllPaymentsReceiptPDF } from "@/lib/generateReceipt";
 import { 
   BookOpen, Award, Calendar, Download, CheckCircle, Clock, AlertCircle,
-  Play, Trophy, Target, Zap, Star, TrendingUp, MapPin, IndianRupee, History
+  Play, Trophy, Target, Zap, Star, TrendingUp, MapPin, IndianRupee, History, FileText
 } from "lucide-react";
 
 interface Enrollment {
@@ -549,28 +550,74 @@ const StudentDashboard = () => {
                       </div>
 
                       {history.length > 0 && (
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Date</TableHead>
-                              <TableHead>Amount</TableHead>
-                              <TableHead>Method</TableHead>
-                              <TableHead>Receipt</TableHead>
-                              <TableHead>Notes</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {history.map((payment) => (
-                              <TableRow key={payment.id}>
-                                <TableCell>{new Date(payment.payment_date).toLocaleDateString()}</TableCell>
-                                <TableCell className="font-medium text-green-600">₹{payment.amount.toLocaleString()}</TableCell>
-                                <TableCell className="capitalize">{payment.payment_method}</TableCell>
-                                <TableCell>{payment.receipt_number || '-'}</TableCell>
-                                <TableCell>{payment.notes || '-'}</TableCell>
+                        <>
+                          <div className="flex justify-end mb-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => generateAllPaymentsReceiptPDF(
+                                profile?.full_name || "Student",
+                                profile?.email || "",
+                                enrollment.courses.name,
+                                enrollment.courses.full_name,
+                                enrollment.centers?.name || "",
+                                enrollment.courses.fee,
+                                history
+                              )}
+                              className="gap-2"
+                            >
+                              <FileText className="w-4 h-4" />
+                              Download Statement
+                            </Button>
+                          </div>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Amount</TableHead>
+                                <TableHead>Method</TableHead>
+                                <TableHead>Receipt</TableHead>
+                                <TableHead>Notes</TableHead>
+                                <TableHead className="text-right">Download</TableHead>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                            </TableHeader>
+                            <TableBody>
+                              {history.map((payment) => (
+                                <TableRow key={payment.id}>
+                                  <TableCell>{new Date(payment.payment_date).toLocaleDateString()}</TableCell>
+                                  <TableCell className="font-medium text-green-600">₹{payment.amount.toLocaleString()}</TableCell>
+                                  <TableCell className="capitalize">{payment.payment_method}</TableCell>
+                                  <TableCell>{payment.receipt_number || '-'}</TableCell>
+                                  <TableCell>{payment.notes || '-'}</TableCell>
+                                  <TableCell className="text-right">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => generateReceiptPDF({
+                                        receiptNumber: payment.receipt_number || `RCP-${payment.id.slice(0, 8)}`,
+                                        studentName: profile?.full_name || "Student",
+                                        studentEmail: profile?.email || "",
+                                        courseName: enrollment.courses.name,
+                                        courseFullName: enrollment.courses.full_name,
+                                        centerName: enrollment.centers?.name || "",
+                                        paymentDate: new Date(payment.payment_date).toLocaleDateString(),
+                                        amount: payment.amount,
+                                        paymentMethod: payment.payment_method,
+                                        totalFee: enrollment.courses.fee,
+                                        totalPaid: enrollment.amount_paid || 0,
+                                        balanceDue: due,
+                                        notes: payment.notes || undefined
+                                      })}
+                                      className="text-primary hover:text-primary/80"
+                                    >
+                                      <Download className="w-4 h-4" />
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </>
                       )}
                       {history.length === 0 && (
                         <p className="text-sm text-muted-foreground text-center py-4">No payment history available</p>
