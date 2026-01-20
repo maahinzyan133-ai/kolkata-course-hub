@@ -11,10 +11,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { generateReceiptPDF } from "@/lib/generateReceipt";
 import { 
   Users, BookOpen, GraduationCap, IndianRupee, 
   Award, Calendar, Search, CheckCircle, 
-  Clock, AlertCircle, Trash2, Bell, MapPin, Plus, Play, Video, Trophy, History, Star
+  Clock, AlertCircle, Trash2, Bell, MapPin, Plus, Play, Video, Trophy, History, Star, Download
 } from "lucide-react";
 
 interface User {
@@ -768,19 +769,50 @@ const AdminDashboard = () => {
                     <TableHead>Amount</TableHead>
                     <TableHead>Method</TableHead>
                     <TableHead>Receipt</TableHead>
+                    <TableHead className="text-right">Download</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredPayments.map((payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell>{new Date(payment.payment_date).toLocaleDateString()}</TableCell>
-                      <TableCell>{payment.enrollments?.profiles?.full_name || '-'}</TableCell>
-                      <TableCell>{payment.enrollments?.courses?.name || '-'}</TableCell>
-                      <TableCell className="font-bold text-green-600">₹{payment.amount.toLocaleString()}</TableCell>
-                      <TableCell className="capitalize">{payment.payment_method}</TableCell>
-                      <TableCell>{payment.receipt_number || '-'}</TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredPayments.map((payment) => {
+                    const enrollment = enrollments.find(e => e.id === payment.enrollment_id);
+                    const user = users.find(u => u.user_id === enrollment?.user_id);
+                    const center = centers.find(c => c.id === enrollment?.center_id);
+                    
+                    return (
+                      <TableRow key={payment.id}>
+                        <TableCell>{new Date(payment.payment_date).toLocaleDateString()}</TableCell>
+                        <TableCell>{payment.enrollments?.profiles?.full_name || '-'}</TableCell>
+                        <TableCell>{payment.enrollments?.courses?.name || '-'}</TableCell>
+                        <TableCell className="font-bold text-green-600">₹{payment.amount.toLocaleString()}</TableCell>
+                        <TableCell className="capitalize">{payment.payment_method}</TableCell>
+                        <TableCell>{payment.receipt_number || '-'}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => generateReceiptPDF({
+                              receiptNumber: payment.receipt_number || `RCP-${payment.id.slice(0, 8)}`,
+                              studentName: user?.full_name || "Student",
+                              studentEmail: user?.email || "",
+                              courseName: enrollment?.courses?.name || "Course",
+                              courseFullName: enrollment?.courses?.full_name || "",
+                              centerName: center?.name || "",
+                              paymentDate: new Date(payment.payment_date).toLocaleDateString(),
+                              amount: payment.amount,
+                              paymentMethod: payment.payment_method,
+                              totalFee: enrollment?.courses?.fee || 0,
+                              totalPaid: enrollment?.amount_paid || 0,
+                              balanceDue: (enrollment?.courses?.fee || 0) - (enrollment?.amount_paid || 0),
+                              notes: payment.notes || undefined
+                            })}
+                            className="text-primary hover:text-primary/80"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
