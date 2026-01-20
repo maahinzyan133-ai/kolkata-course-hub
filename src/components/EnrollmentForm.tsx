@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { User, Phone, Mail, BookOpen, Calendar, MapPin, IndianRupee, GraduationCap } from "lucide-react";
+import { User, Phone, Mail, BookOpen, Calendar, MapPin, IndianRupee, GraduationCap, CreditCard, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -38,6 +39,7 @@ const EnrollmentForm = () => {
     course: "",
     center: "",
     preferredTime: "",
+    paymentMethod: "offline", // "offline" or "online"
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -101,26 +103,48 @@ const EnrollmentForm = () => {
       const selectedCourse = courses.find((c) => c.id === formData.course);
       const selectedCenter = centers.find((c) => c.id === formData.center);
       
-      // For now, send a WhatsApp message with the enrollment details
-      const message = `🎓 New Enrollment Request!\n\n` +
-        `Name: ${formData.name}\n` +
-        `Phone: ${formData.phone}\n` +
-        `Email: ${formData.email || 'Not provided'}\n` +
-        `Course: ${selectedCourse?.full_name}\n` +
-        `Center: ${selectedCenter?.name}\n` +
-        `Preferred Time: ${formData.preferredTime || 'Not specified'}`;
+      if (formData.paymentMethod === "online") {
+        // For online payment, redirect to a payment page or show payment modal
+        const paymentMessage = `🎓 Online Payment Enrollment!\n\n` +
+          `Name: ${formData.name}\n` +
+          `Phone: ${formData.phone}\n` +
+          `Email: ${formData.email || 'Not provided'}\n` +
+          `Course: ${selectedCourse?.full_name}\n` +
+          `Center: ${selectedCenter?.name}\n` +
+          `Amount: ₹${selectedCourse?.fee?.toLocaleString()}\n` +
+          `Payment Mode: Online\n` +
+          `Preferred Time: ${formData.preferredTime || 'Not specified'}`;
 
-      const whatsappUrl = `https://wa.me/919733089257?text=${encodeURIComponent(message)}`;
-      
-      toast({
-        title: "🎉 Enrollment Request Ready!",
-        description: `Thank you ${formData.name}! Click the WhatsApp button to complete your enrollment for ${selectedCourse?.name} at ${selectedCenter?.name}.`,
-      });
+        const whatsappUrl = `https://wa.me/919733089257?text=${encodeURIComponent(paymentMessage)}`;
+        
+        toast({
+          title: "💳 Online Payment Selected!",
+          description: `Thank you ${formData.name}! You'll be redirected to WhatsApp to complete your online payment of ₹${selectedCourse?.fee?.toLocaleString()} for ${selectedCourse?.name}.`,
+        });
 
-      // Open WhatsApp
-      window.open(whatsappUrl, '_blank');
+        window.open(whatsappUrl, '_blank');
+      } else {
+        // Offline payment - send WhatsApp message
+        const message = `🎓 New Enrollment Request!\n\n` +
+          `Name: ${formData.name}\n` +
+          `Phone: ${formData.phone}\n` +
+          `Email: ${formData.email || 'Not provided'}\n` +
+          `Course: ${selectedCourse?.full_name}\n` +
+          `Center: ${selectedCenter?.name}\n` +
+          `Payment Mode: Pay at Center\n` +
+          `Preferred Time: ${formData.preferredTime || 'Not specified'}`;
 
-      setFormData({ name: "", phone: "", email: "", course: "", center: "", preferredTime: "" });
+        const whatsappUrl = `https://wa.me/919733089257?text=${encodeURIComponent(message)}`;
+        
+        toast({
+          title: "🎉 Enrollment Request Ready!",
+          description: `Thank you ${formData.name}! Click the WhatsApp button to complete your enrollment for ${selectedCourse?.name} at ${selectedCenter?.name}.`,
+        });
+
+        window.open(whatsappUrl, '_blank');
+      }
+
+      setFormData({ name: "", phone: "", email: "", course: "", center: "", preferredTime: "", paymentMethod: "offline" });
     } catch (error) {
       console.error("Enrollment error:", error);
       toast({
@@ -290,12 +314,54 @@ const EnrollmentForm = () => {
                   </Select>
                 </div>
 
+                {/* Payment Method Selection */}
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-primary" />
+                    Payment Method
+                  </Label>
+                  <RadioGroup 
+                    value={formData.paymentMethod} 
+                    onValueChange={(value) => handleChange("paymentMethod", value)}
+                    className="grid grid-cols-2 gap-4"
+                  >
+                    <div className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.paymentMethod === 'offline' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}>
+                      <RadioGroupItem value="offline" id="offline" />
+                      <Label htmlFor="offline" className="cursor-pointer flex items-center gap-2">
+                        <Wallet className="w-5 h-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">Pay at Center</p>
+                          <p className="text-xs text-muted-foreground">Pay when you visit</p>
+                        </div>
+                      </Label>
+                    </div>
+                    <div className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.paymentMethod === 'online' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}>
+                      <RadioGroupItem value="online" id="online" />
+                      <Label htmlFor="online" className="cursor-pointer flex items-center gap-2">
+                        <CreditCard className="w-5 h-5 text-primary" />
+                        <div>
+                          <p className="font-medium">Pay Online</p>
+                          <p className="text-xs text-muted-foreground">UPI/Card/NetBanking</p>
+                        </div>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                  {formData.paymentMethod === 'online' && selectedCourse && (
+                    <div className="p-3 bg-success/10 rounded-lg border border-success/30">
+                      <p className="text-sm text-success font-medium flex items-center gap-2">
+                        <IndianRupee className="w-4 h-4" />
+                        Amount to pay: ₹{selectedCourse.fee.toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <Button 
                   type="submit" 
                   className="w-full gradient-gold text-secondary-foreground font-semibold py-6 text-lg"
                   disabled={isSubmitting || isLoading}
                 >
-                  {isSubmitting ? "Processing..." : "📱 Enroll via WhatsApp"}
+                  {isSubmitting ? "Processing..." : formData.paymentMethod === 'online' ? "💳 Proceed to Pay Online" : "📱 Enroll via WhatsApp"}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">

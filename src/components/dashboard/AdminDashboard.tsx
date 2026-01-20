@@ -212,7 +212,7 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
-  // Filter by center
+  // Filter by center - strict filtering (only show users from selected center, not unassigned)
   const filteredUsers = users.filter(u => 
     (selectedCenter === "all" || u.center_id === selectedCenter) &&
     (u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -225,12 +225,14 @@ const AdminDashboard = () => {
     e.courses?.name?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  // For videos - strict: only show videos that belong to the selected center (not unassigned ones)
   const filteredVideos = videos.filter(v =>
-    selectedCenter === "all" || v.center_id === selectedCenter || !v.center_id
+    selectedCenter === "all" ? true : v.center_id === selectedCenter
   );
 
+  // For achievements - strict: only show achievements that belong to the selected center
   const filteredAchievements = achievements.filter(a =>
-    selectedCenter === "all" || a.center_id === selectedCenter || !a.center_id
+    selectedCenter === "all" ? true : a.center_id === selectedCenter
   );
 
   const filteredPayments = paymentHistory.filter(p => {
