@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.generate-certificate]
 verify_jwt = false
+
+[functions.create-enrollment-payment]
+verify_jwt = false
+
+[functions.handle-enrollment-webhook]
+verify_jwt = false

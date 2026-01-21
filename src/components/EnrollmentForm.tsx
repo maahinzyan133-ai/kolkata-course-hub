@@ -83,46 +83,46 @@ const EnrollmentForm = () => {
     setIsSubmitting(true);
 
     try {
-      // Check if user already has an account
-      const { data: existingUser } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .eq("phone", formData.phone)
-        .maybeSingle();
-
-      if (existingUser) {
-        toast({
-          title: "Account Exists",
-          description: "You already have an account. Please login to enroll in courses.",
-          variant: "destructive",
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
       const selectedCourse = courses.find((c) => c.id === formData.course);
       const selectedCenter = centers.find((c) => c.id === formData.center);
       
       if (formData.paymentMethod === "online") {
-        // For online payment, redirect to a payment page or show payment modal
-        const paymentMessage = `🎓 Online Payment Enrollment!\n\n` +
-          `Name: ${formData.name}\n` +
-          `Phone: ${formData.phone}\n` +
-          `Email: ${formData.email || 'Not provided'}\n` +
-          `Course: ${selectedCourse?.full_name}\n` +
-          `Center: ${selectedCenter?.name}\n` +
-          `Amount: ₹${selectedCourse?.fee?.toLocaleString()}\n` +
-          `Payment Mode: Online\n` +
-          `Preferred Time: ${formData.preferredTime || 'Not specified'}`;
-
-        const whatsappUrl = `https://wa.me/919733089257?text=${encodeURIComponent(paymentMessage)}`;
-        
-        toast({
-          title: "💳 Online Payment Selected!",
-          description: `Thank you ${formData.name}! You'll be redirected to WhatsApp to complete your online payment of ₹${selectedCourse?.fee?.toLocaleString()} for ${selectedCourse?.name}.`,
+        // Create Stripe checkout session
+        const { data, error } = await supabase.functions.invoke('create-enrollment-payment', {
+          body: {
+            name: formData.name,
+            phone: formData.phone,
+            email: formData.email || undefined,
+            course_id: formData.course,
+            center_id: formData.center,
+            preferred_time: formData.preferredTime || undefined,
+            amount: selectedCourse?.fee || 0,
+            course_name: selectedCourse?.full_name || selectedCourse?.name || '',
+            center_name: selectedCenter?.name || '',
+          }
         });
 
-        window.open(whatsappUrl, '_blank');
+        if (error) {
+          console.error("Payment error:", error);
+          toast({
+            title: "Payment Error",
+            description: "Failed to initiate payment. Please try again or choose offline payment.",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (data?.url) {
+          toast({
+            title: "💳 Redirecting to Payment...",
+            description: `You'll be redirected to complete your payment of ₹${selectedCourse?.fee?.toLocaleString()}.`,
+          });
+          
+          // Redirect to Stripe Checkout
+          window.location.href = data.url;
+          return;
+        }
       } else {
         // Offline payment - send WhatsApp message
         const message = `🎓 New Enrollment Request!\n\n` +

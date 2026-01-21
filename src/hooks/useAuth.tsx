@@ -16,6 +16,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   isAdmin: boolean;
+  adminCenterId: string | null; // null means super admin (all centers)
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminCenterId, setAdminCenterId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
@@ -46,11 +48,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const { data: roleData } = await supabase
         .from('user_roles')
-        .select('role')
+        .select('role, center_id')
         .eq('user_id', userId)
         .maybeSingle();
       
       setIsAdmin(roleData?.role === 'admin');
+      setAdminCenterId(roleData?.center_id || null);
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
@@ -77,6 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setProfile(null);
           setIsAdmin(false);
+          setAdminCenterId(null);
         }
         setIsLoading(false);
       }
@@ -117,6 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
     setProfile(null);
     setIsAdmin(false);
+    setAdminCenterId(null);
   };
 
   return (
@@ -125,6 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       session,
       profile,
       isAdmin,
+      adminCenterId,
       isLoading,
       signIn,
       signUp,
