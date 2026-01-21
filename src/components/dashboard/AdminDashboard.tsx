@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import { generateReceiptPDF } from "@/lib/generateReceipt";
 import { 
   Users, BookOpen, GraduationCap, IndianRupee, 
   Award, Calendar, Search, CheckCircle, 
-  Clock, AlertCircle, Trash2, Bell, MapPin, Plus, Play, Video, Trophy, History, Star, Download
+  Clock, AlertCircle, Trash2, Bell, MapPin, Plus, Play, Video, Trophy, History, Star, Download, Shield
 } from "lucide-react";
 
 interface User {
@@ -100,6 +101,7 @@ interface PaymentHistory {
 }
 
 const AdminDashboard = () => {
+  const { adminCenterId } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -109,13 +111,17 @@ const AdminDashboard = () => {
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCenter, setSelectedCenter] = useState<string>("all");
+  // For center-specific admins, auto-select their center
+  const [selectedCenter, setSelectedCenter] = useState<string>(adminCenterId || "all");
   const { toast } = useToast();
 
   // Form states
-  const [newVideo, setNewVideo] = useState({ title: "", description: "", video_url: "", thumbnail_url: "", course_id: "", center_id: "", is_public: true });
-  const [newAchievement, setNewAchievement] = useState({ title: "", description: "", image_url: "", student_name: "", course_name: "", center_id: "", is_featured: false });
+  const [newVideo, setNewVideo] = useState({ title: "", description: "", video_url: "", thumbnail_url: "", course_id: "", center_id: adminCenterId || "", is_public: true });
+  const [newAchievement, setNewAchievement] = useState({ title: "", description: "", image_url: "", student_name: "", course_name: "", center_id: adminCenterId || "", is_featured: false });
   const [newPayment, setNewPayment] = useState({ enrollment_id: "", amount: "", payment_method: "cash", receipt_number: "", notes: "" });
+
+  // Check if admin is center-specific (cannot switch centers)
+  const isCenterAdmin = adminCenterId !== null;
 
   useEffect(() => {
     fetchData();
@@ -472,30 +478,40 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Center Filter */}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant={selectedCenter === "all" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSelectedCenter("all")}
-          className={selectedCenter === "all" ? "gradient-primary" : ""}
-        >
-          <MapPin className="w-4 h-4 mr-1" />
-          All Centers
-        </Button>
-        {centers.map(center => (
+      {/* Center Filter - Only show for super admins */}
+      {isCenterAdmin ? (
+        <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
+          <Shield className="w-5 h-5 text-primary" />
+          <span className="text-sm font-medium">
+            Center Admin: <strong>{centers.find(c => c.id === adminCenterId)?.name || 'Your Center'}</strong>
+          </span>
+          <Badge variant="outline" className="ml-auto">Center-specific access</Badge>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
           <Button
-            key={center.id}
-            variant={selectedCenter === center.id ? "default" : "outline"}
+            variant={selectedCenter === "all" ? "default" : "outline"}
             size="sm"
-            onClick={() => setSelectedCenter(center.id)}
-            className={selectedCenter === center.id ? "gradient-primary" : ""}
+            onClick={() => setSelectedCenter("all")}
+            className={selectedCenter === "all" ? "gradient-primary" : ""}
           >
             <MapPin className="w-4 h-4 mr-1" />
-            {center.name}
+            All Centers
           </Button>
-        ))}
-      </div>
+          {centers.map(center => (
+            <Button
+              key={center.id}
+              variant={selectedCenter === center.id ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCenter(center.id)}
+              className={selectedCenter === center.id ? "gradient-primary" : ""}
+            >
+              <MapPin className="w-4 h-4 mr-1" />
+              {center.name}
+            </Button>
+          ))}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
